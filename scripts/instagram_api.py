@@ -1,19 +1,19 @@
 """
-غلاف بسيط حول Instagram Graph API — يُستخدم من سكربتات GitHub Actions.
-يقرأ التوكن ومعرف الحساب من متغيرات البيئة (تُمرَّر من GitHub Secrets).
+غلاف بسيط حول Instagram API with Instagram Login — يُستخدم من سكربتات GitHub Actions.
 """
 import os
 import time
 import requests
 
-GRAPH_API_VERSION = "v20.0"
-BASE_URL = f"https://graph.facebook.com/{GRAPH_API_VERSION}"
+GRAPH_API_VERSION = "v21.0"
+BASE_URL = f"https://graph.instagram.com/{GRAPH_API_VERSION}"
 
 
 class InstagramAPI:
     def __init__(self):
         self.token = os.environ["IG_ACCESS_TOKEN"]
-        self.ig_user_id = os.environ["IG_USER_ID"]
+        # مع توكنات IGAA نستخدم "me" بدل معرف رقمي محدد
+        self.ig_user_id = os.environ.get("IG_USER_ID") or "me"
 
     def _get(self, path, params=None):
         params = params or {}
@@ -58,4 +58,4 @@ class InstagramAPI:
         return self._post(f"{self.ig_user_id}/media_publish", {"creation_id": creation_id})
 
     def get_account_summary(self) -> dict:
-        return self._get(self.ig_user_id, {"fields": "followers_count,media_count,name,username"})
+        return self._get(self.ig_user_id, {"fields": "user_id,username,account_type,media_count,followers_count"})
