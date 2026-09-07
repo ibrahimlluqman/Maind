@@ -1,0 +1,4 @@
+ارفع هنا صور/فيديوهات منشوراتك (jpg/png/mp4/mov).
+كل ملف يصير له رابط عام تلقائيًا على شكل:
+https://raw.githubusercontent.com/<اسم_حسابك>/<اسم_الريبو>/main/media/<اسم_الملف>
+وهذا الرابط هو اللي تحطه بحقل media_path داخل data/scheduled_posts.json

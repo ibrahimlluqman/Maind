@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl" data-theme="dark" data-lang="bad">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#14131C">
+<meta name="description" content="نظام شخصي لإدارة وجدولة منشورات Instagram — ibrahimlluqman">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>AI Social Scheduler — ibrahimlluqman</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --amber:#F2A93B;
+  --amber-dim:#8a6423;
+  --teal:#3FBF8F;
+  --rose:#E8586B;
+  --radius-s:10px;
+  --radius-m:16px;
+  --radius-l:22px;
+}
+html[data-theme="dark"]{
+  --ink:#14131C;
+  --panel:#1D1B27;
+  --panel-2:#242230;
+  --line:#332F42;
+  --text:#EEEBF5;
+  --text-dim:#9A96AE;
+  --shadow: 0 12px 30px rgba(0,0,0,.35);
+}
+html[data-theme="light"]{
+  --ink:#FAF8F4;
+  --panel:#FFFFFF;
+  --panel-2:#F1EEE7;
+  --line:#E4DFD3;
+  --text:#221F2B;
+  --text-dim:#726C7E;
+  --shadow: 0 10px 24px rgba(60,45,20,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{ background:var(--ink); }
+body{
+  background:transparent;
+  color:var(--text);
+  font-family:'IBM Plex Sans Arabic','IBM Plex Mono',sans-serif;
+  min-height:100vh;
+  transition:color .25s ease;
+}
+h1,h2,h3,.brand{ font-family:'Noto Kufi Arabic','IBM Plex Sans Arabic',sans-serif; }
+.mono{ font-family:'IBM Plex Mono',monospace; letter-spacing:.02em; }
+button{ font-family:inherit; cursor:pointer; }
+input,select,textarea{ font-family:inherit; }
+::selection{ background:var(--amber); color:#141018; }
+
+/* ---------- NEURAL BACKGROUND ---------- */
+#brain-bg{
+  position:fixed; inset:0; width:100%; height:100%; z-index:0;
+  opacity:.55; pointer-events:none;
+}
+html[data-theme="light"] #brain-bg{ opacity:.22; }
+
+.field{ text-align:right; margin-bottom:14px; }
+.field label{ display:block; font-size:12.5px; color:var(--text-dim); margin-bottom:6px; }
+.field input{
+  width:100%; padding:11px 14px; border-radius:var(--radius-s);
+  border:1px solid var(--line); background:var(--panel-2); color:var(--text); font-size:14px;
+  outline:none;
+}
+.field input:focus{ border-color:var(--amber); }
+.btn-primary{
+  width:100%; margin-top:8px; padding:12px; border:none; border-radius:var(--radius-s);
+  background:var(--amber); color:#1d1508; font-weight:600; font-size:14.5px;
+}
+.btn-primary:focus-visible, button:focus-visible, a:focus-visible{ outline:2px solid var(--amber); outline-offset:2px; }
+
+/* ---------- APP SHELL ---------- */
+#app{ display:flex; min-height:100vh; position:relative; z-index:1; }
+.sidebar{
+  width:238px; flex-shrink:0; background:var(--panel);
+  border-left:1px solid var(--line);
+  padding:22px 16px; display:flex; flex-direction:column; gap:26px;
+  position:sticky; top:0; height:100vh;
+}
+.brand-row{ display:flex; align-items:center; gap:10px; padding:0 6px; }
+.brand-mark{
+  width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,var(--amber),#c97a1f);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800; color:#14100a; font-size:15px;
+}
+.brand{ font-size:15px; font-weight:700; }
+.brand small{ display:block; font-weight:400; font-size:11px; color:var(--text-dim); font-family:'IBM Plex Sans Arabic'; }
+
+nav.navlist{ display:flex; flex-direction:column; gap:2px; }
+.navlink{
+  display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:var(--radius-s);
+  color:var(--text-dim); background:transparent; border:none; width:100%; text-align:right; font-size:14px;
+  transition:background .15s ease,color .15s ease;
+}
+.navlink svg{ width:19px; height:19px; flex-shrink:0; }
+.navlink:hover{ background:var(--panel-2); color:var(--text); }
+.navlink.active{ background:var(--panel-2); color:var(--amber); font-weight:600; }
+
+.sidebar-foot{ margin-top:auto; padding:12px; border-radius:var(--radius-m); background:var(--panel-2); }
+.sidebar-foot .acct{ display:flex; align-items:center; gap:10px; }
+.avatar-sm{
+  width:34px;height:34px;border-radius:50%; flex-shrink:0;
+  background:linear-gradient(135deg,#f2a93b,#e8586b,#7c5cff);
+  display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff;
+}
+.sidebar-foot .handle{ font-size:13px; font-weight:600; }
+.sidebar-foot .status{ font-size:11px; color:var(--teal); }
+
+/* ---------- MAIN ---------- */
+main{ flex:1; min-width:0; }
+.topbar{
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding:18px 28px; border-bottom:1px solid var(--line);
+  position:sticky; top:0; background:color-mix(in srgb, var(--ink) 78%, transparent);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:5;
+}
+.topbar h2{ font-size:19px; }
+.topbar-tools{ display:flex; align-items:center; gap:8px; }
+.icon-btn{
+  width:38px;height:38px;border-radius:10px; border:1px solid var(--line); background:var(--panel);
+  color:var(--text-dim); display:flex; align-items:center; justify-content:center; position:relative;
+}
+.icon-btn:hover{ color:var(--text); border-color:var(--amber); }
+.icon-btn svg{ width:18px;height:18px; }
+.dot{ position:absolute; top:7px; left:8px; width:7px;height:7px;border-radius:50%; background:var(--rose); }
+.pill-toggle{
+  display:flex; border:1px solid var(--line); border-radius:999px; padding:3px; background:var(--panel); gap:2px;
+}
+.pill-toggle button{
+  border:none; background:transparent; padding:6px 12px; border-radius:999px; font-size:12.5px; color:var(--text-dim);
+}
+.pill-toggle button.active{ background:var(--amber); color:#1d1508; font-weight:600; }
+
+.view{ display:none; padding:26px 28px 100px; }
+.view.active{ display:block; }
+
+/* ---------- DASHBOARD ---------- */
+.stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+.stat-card{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-m); padding:18px;
+}
+.stat-card .n{ font-size:30px; font-weight:700; font-family:'IBM Plex Mono'; }
+.stat-card .l{ font-size:12.5px; color:var(--text-dim); margin-top:4px; }
+.stat-card.sched .n{ color:var(--amber); }
+.stat-card.pub .n{ color:var(--teal); }
+.stat-card.fail .n{ color:var(--rose); }
+
+.panel{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-m); padding:20px; }
+.panel-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.panel-head h3{ font-size:15px; }
+.link-btn{ background:none;border:none;color:var(--amber); font-size:13px; font-weight:600; }
+
+.post-row{
+  display:flex; align-items:center; gap:14px; padding:12px 4px; border-top:1px solid var(--line);
+}
+.post-row:first-of-type{ border-top:none; }
+.post-icon{
+  width:38px;height:38px;border-radius:10px; background:var(--panel-2); display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.post-icon svg{ width:18px;height:18px; color:var(--text-dim); }
+.post-meta{ flex:1; min-width:0; }
+.post-meta .t{ font-size:13.5px; font-weight:600; }
+.post-meta .s{ font-size:12px; color:var(--text-dim); font-family:'IBM Plex Mono'; }
+.badge{ font-size:11px; padding:4px 10px; border-radius:999px; font-weight:600; white-space:nowrap; }
+.badge.sched{ background:rgba(242,169,59,.15); color:var(--amber); }
+.badge.pub{ background:rgba(63,191,143,.15); color:var(--teal); }
+.badge.fail{ background:rgba(232,88,107,.15); color:var(--rose); }
+.badge.draft{ background:var(--panel-2); color:var(--text-dim); }
+
+/* ---------- CALENDAR ---------- */
+.cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:10px; }
+.cal-dow{ text-align:center; font-size:11.5px; color:var(--text-dim); padding-bottom:6px; }
+.cal-cell{
+  aspect-ratio:1/0.85; border:1px solid var(--line); border-radius:var(--radius-s); padding:6px;
+  display:flex; flex-direction:column; gap:4px; font-size:11.5px; color:var(--text-dim); background:var(--panel-2);
+}
+.cal-cell.empty{ background:transparent; border-color:transparent; }
+.cal-cell .d{ font-family:'IBM Plex Mono'; font-size:12px; }
+.cal-tag{ font-size:10px; border-radius:6px; padding:2px 5px; display:inline-flex; align-items:center; gap:3px; width:fit-content; }
+.cal-tag.sched{ background:rgba(242,169,59,.18); color:var(--amber); }
+.cal-tag.pub{ background:rgba(63,191,143,.18); color:var(--teal); }
+.legend{ display:flex; gap:16px; margin-top:16px; flex-wrap:wrap; }
+.legend span{ font-size:12px; color:var(--text-dim); display:flex; align-items:center; gap:6px; }
+.legend i{ width:8px;height:8px;border-radius:50%; display:inline-block; }
+
+/* ---------- CREATE POST ---------- */
+.create-grid{ display:grid; grid-template-columns:1.1fr .9fr; gap:20px; align-items:start; }
+.type-toggle{ display:flex; gap:10px; margin-bottom:16px; }
+.type-toggle label{
+  flex:1; border:1px solid var(--line); border-radius:var(--radius-s); padding:14px; text-align:center; font-size:13.5px;
+  color:var(--text-dim); background:var(--panel-2); cursor:pointer;
+}
+.type-toggle input{ display:none; }
+.type-toggle input:checked + span{ color:var(--amber); font-weight:600; }
+.type-toggle label:has(input:checked){ border-color:var(--amber); }
+.dropzone{
+  border:1.5px dashed var(--line); border-radius:var(--radius-m); padding:38px 20px; text-align:center; color:var(--text-dim);
+  background:var(--panel-2); margin-bottom:16px;
+}
+.dropzone svg{ width:26px;height:26px; margin-bottom:8px; color:var(--amber); }
+.dropzone .hint{ font-size:12px; margin-top:4px; }
+label.field-label{ display:block; font-size:12.5px; color:var(--text-dim); margin-bottom:6px; }
+textarea, .input{
+  width:100%; padding:12px 14px; border-radius:var(--radius-s); border:1px solid var(--line);
+  background:var(--panel-2); color:var(--text); font-size:14px; outline:none; resize:vertical;
+}
+textarea:focus, .input:focus{ border-color:var(--amber); }
+.ai-row{ display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 20px; }
+.chip{
+  border:1px solid var(--line); background:var(--panel-2); color:var(--text); font-size:12.5px;
+  padding:8px 13px; border-radius:999px; display:flex; align-items:center; gap:6px;
+}
+.chip svg{ width:14px;height:14px; color:var(--amber); }
+.chip:hover{ border-color:var(--amber); }
+.sched-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+.sched-grid .full{ grid-column:1/-1; }
+
+/* ---------- POSTS LIST ---------- */
+.filter-row{ display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.filter-row button{
+  border:1px solid var(--line); background:var(--panel); color:var(--text-dim); font-size:12.5px;
+  padding:7px 14px; border-radius:999px;
+}
+.filter-row button.active{ background:var(--amber); color:#1d1508; border-color:var(--amber); font-weight:600; }
+.list-row{
+  display:flex; align-items:center; gap:14px; padding:13px 6px; border-top:1px solid var(--line);
+}
+.list-row:first-of-type{ border-top:none; }
+.thumb{ width:46px;height:46px;border-radius:10px; background:var(--panel-2); flex-shrink:0;
+  background:linear-gradient(135deg,#33303f,#242230); }
+.list-meta{ flex:1; min-width:0; }
+.list-meta .cap{ font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:340px; }
+.list-meta .time{ font-size:11.5px; color:var(--text-dim); font-family:'IBM Plex Mono'; margin-top:2px; }
+.row-actions{ display:flex; gap:6px; }
+.row-actions button{
+  width:30px;height:30px; border-radius:8px; border:1px solid var(--line); background:var(--panel-2); color:var(--text-dim);
+  display:flex; align-items:center; justify-content:center;
+}
+.row-actions button:hover{ color:var(--amber); border-color:var(--amber); }
+.row-actions svg{ width:14px;height:14px; }
+
+/* ---------- ACCOUNT / SETTINGS ---------- */
+.acct-card{ display:flex; align-items:center; gap:16px; }
+.avatar-lg{
+  width:64px;height:64px;border-radius:50%;
+  background:linear-gradient(135deg,#f2a93b,#e8586b,#7c5cff);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;
+}
+.acct-card .handle{ font-size:17px; font-weight:700; }
+.acct-card .status-row{ display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--teal); margin-top:2px; }
+.acct-card .status-row i{ width:7px;height:7px;border-radius:50%; background:var(--teal); }
+.btn-outline{
+  margin-inline-start:auto; border:1px solid var(--rose); color:var(--rose); background:transparent; padding:9px 16px; border-radius:var(--radius-s); font-size:13px; font-weight:600;
+}
+.settings-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.settings-block{ margin-bottom:22px; }
+.settings-block h3{ font-size:14px; margin-bottom:10px; color:var(--text-dim); font-weight:600; }
+.theme-pills, .lang-pills{ display:flex; gap:8px; }
+.theme-pills button, .lang-pills button{
+  border:1px solid var(--line); background:var(--panel-2); color:var(--text-dim); padding:9px 15px; border-radius:var(--radius-s); font-size:13px; display:flex; align-items:center; gap:6px;
+}
+.theme-pills button.active, .lang-pills button.active{ border-color:var(--amber); color:var(--amber); font-weight:600; }
+
+/* ---------- MOBILE BOTTOM NAV ---------- */
+.bottom-nav{ display:none; }
+
+@media (max-width: 880px){
+  .sidebar{ display:none; }
+  .stat-grid{ grid-template-columns:repeat(2,1fr); }
+  .create-grid{ grid-template-columns:1fr; }
+  .settings-grid{ grid-template-columns:1fr; }
+  .topbar{ padding:16px; }
+  .view{ padding:18px 16px 96px; }
+  .list-meta .cap{ max-width:44vw; }
+  .bottom-nav{
+    display:flex; position:fixed; bottom:0; inset-inline:0; height:64px; background:var(--panel);
+    border-top:1px solid var(--line); z-index:10; align-items:center; justify-content:space-around;
+  }
+  .bottom-nav button{ background:none; border:none; color:var(--text-dim); display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; }
+  .bottom-nav button.active{ color:var(--amber); }
+  .bottom-nav button svg{ width:20px;height:20px; }
+  .bottom-nav .fab{
+    width:46px;height:46px;border-radius:50%; background:linear-gradient(135deg,var(--amber),#c97a1f);
+    display:flex;align-items:center;justify-content:center; margin-top:-22px; box-shadow:var(--shadow);
+  }
+  .bottom-nav .fab svg{ width:22px;height:22px; color:#1d1508; }
+}
+
+@media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+
+<!-- ============ NEURAL BACKGROUND ============ -->
+<canvas id="brain-bg"></canvas>
+
+<!-- ============ APP ============ -->
+<div id="app">
+
+  <aside class="sidebar">
+    <div class="brand-row">
+      <div class="brand-mark">AI</div>
+      <div class="brand">Social Scheduler<small data-i18n="brand_sub">بەڕێوەبردنی پۆست</small></div>
+    </div>
+
+    <nav class="navlist" id="navlist">
+      <button class="navlink active" data-view="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>
+        <span data-i18n="nav_dashboard">داشبۆرد</span>
+      </button>
+      <button class="navlink" data-view="posts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 4v16"/></svg>
+        <span data-i18n="nav_posts">پۆستەکان</span>
+      </button>
+      <button class="navlink" data-view="calendar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        <span data-i18n="nav_calendar">ڕۆژژمێر</span>
+      </button>
+      <button class="navlink" data-view="create">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+        <span data-i18n="nav_create">دروستکردنی پۆست</span>
+      </button>
+      <button class="navlink" data-view="account">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="13" rx="3"/><circle cx="9" cy="12.5" r="2.2"/><path d="M14 11h4M14 14h2.5"/></svg>
+        <span data-i18n="nav_account">هەژماری ئینستاگرام</span>
+      </button>
+      <button class="navlink" data-view="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a1.8 1.8 0 0 0 .36 1.98l.05.05a2.2 2.2 0 1 1-3.1 3.1l-.05-.05a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.1 1.65V20a2.2 2.2 0 1 1-4.4 0v-.08a1.8 1.8 0 0 0-1.18-1.65 1.8 1.8 0 0 0-1.98.36l-.05.05a2.2 2.2 0 1 1-3.1-3.1l.05-.05a1.8 1.8 0 0 0 .36-1.98 1.8 1.8 0 0 0-1.65-1.1H2a2.2 2.2 0 1 1 0-4.4h.08a1.8 1.8 0 0 0 1.65-1.18 1.8 1.8 0 0 0-.36-1.98l-.05-.05a2.2 2.2 0 1 1 3.1-3.1l.05.05a1.8 1.8 0 0 0 1.98.36H8.5a1.8 1.8 0 0 0 1.1-1.65V2a2.2 2.2 0 1 1 4.4 0v.08a1.8 1.8 0 0 0 1.1 1.65 1.8 1.8 0 0 0 1.98-.36l.05-.05a2.2 2.2 0 1 1 3.1 3.1l-.05.05a1.8 1.8 0 0 0-.36 1.98v.07a1.8 1.8 0 0 0 1.65 1.1H22a2.2 2.2 0 1 1 0 4.4h-.08a1.8 1.8 0 0 0-1.65 1.1z"/></svg>
+        <span data-i18n="nav_settings">ڕێکخستن</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="acct">
+        <div class="avatar-sm">IL</div>
+        <div>
+          <div class="handle">@ibrahimlluqman</div>
+          <div class="status" data-i18n="connected_short">پەیوەستە ✓</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <h2 id="page-title" data-i18n="nav_dashboard">داشبۆرد</h2>
+      <div class="topbar-tools">
+        <div class="pill-toggle" id="lang-toggle">
+          <button data-lang="bad" class="active">بادینی</button>
+          <button data-lang="ar">العربية</button>
+        </div>
+        <button class="icon-btn" id="theme-btn" title="Theme">
+          <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </button>
+        <button class="icon-btn">
+          <span class="dot"></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ============ DASHBOARD ============ -->
+    <section class="view active" data-view="dashboard">
+      <div class="stat-grid">
+        <div class="stat-card sched"><div class="n" id="stat-sched">6</div><div class="l" data-i18n="stat_sched">پۆستی خشتەکراو</div></div>
+        <div class="stat-card pub"><div class="n" id="stat-pub">142</div><div class="l" data-i18n="stat_pub">بڵاوکراوە</div></div>
+        <div class="stat-card fail"><div class="n" id="stat-fail">2</div><div class="l" data-i18n="stat_fail">سەرنەکەوتوو</div></div>
+        <div class="stat-card"><div class="n" id="stat-draft">9</div><div class="l" data-i18n="stat_draft">ڕەشنووس</div></div>
+      </div>
+
+      <div class="panel" style="margin-bottom:18px;">
+        <div class="panel-head">
+          <h3 data-i18n="upcoming">پۆستە داهاتووەکان</h3>
+          <button class="link-btn" data-goto="calendar" data-i18n="view_calendar">بینینی ڕۆژژمێر</button>
+        </div>
+        <div id="upcoming-list">
+        <div class="post-row">
+          <div class="post-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.6"/><path d="M21 15l-5-5-11 11"/></svg>
+          </div>
+          <div class="post-meta">
+            <div class="t" data-i18n="post_image">پۆستی وێنە</div>
+            <div class="s mono" data-i18n="tomorrow_time">سبەی — 08:00 PM</div>
+          </div>
+          <span class="badge sched" data-i18n="b_sched">خشتەکراو</span>
+        </div>
+        <div class="post-row">
+          <div class="post-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="14" height="16" rx="3"/><path d="M17 9l4-2v10l-4-2"/></svg>
+          </div>
+          <div class="post-meta">
+            <div class="t" data-i18n="post_reel">ڕیلی ڤیدیۆ</div>
+            <div class="s mono">12 Sep — 06:30 PM</div>
+          </div>
+          <span class="badge sched" data-i18n="b_sched">خشتەکراو</span>
+        </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h3 data-i18n="recent_activity">چالاکی دوایین</h3></div>
+        <div class="post-row">
+          <div class="post-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <div class="post-meta">
+            <div class="t" data-i18n="published_ok">پۆست بە سەرکەوتوویی بڵاوکرایەوە</div>
+            <div class="s mono">06 Sep — 09:12 PM</div>
+          </div>
+          <span class="badge pub" data-i18n="b_pub">بڵاوکراوە</span>
+        </div>
+        <div class="post-row">
+          <div class="post-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></div>
+          <div class="post-meta">
+            <div class="t" data-i18n="failed_post">Post #152 — <span data-i18n="ig_error">هەڵەی Instagram API</span></div>
+            <div class="s mono">05 Sep — 08:00 PM</div>
+          </div>
+          <span class="badge fail" data-i18n="b_fail">سەرنەکەوتوو</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ POSTS ============ -->
+    <section class="view" data-view="posts">
+      <div class="filter-row">
+        <button class="active" data-filter="all" data-i18n="f_all">هەموو</button>
+        <button data-filter="sched" data-i18n="b_sched">خشتەکراو</button>
+        <button data-filter="pub" data-i18n="b_pub">بڵاوکراوە</button>
+        <button data-filter="fail" data-i18n="b_fail">سەرنەکەوتوو</button>
+        <button data-filter="draft" data-i18n="b_draft">ڕەشنووس</button>
+      </div>
+      <div class="panel">
+        <div id="posts-list-container">
+        <div class="list-row">
+          <div class="thumb"></div>
+          <div class="list-meta">
+            <div class="cap" data-i18n="cap1">ئاشکراکردنی باشترین ئامرازەکانی زیرەکی دەستکرد 🚀</div>
+            <div class="time mono">12 Sep — 08:30 PM</div>
+          </div>
+          <span class="badge sched" data-i18n="b_sched">خشتەکراو</span>
+          <div class="row-actions">
+            <button title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+            <button title="Duplicate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button>
+            <button title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+          </div>
+        </div>
+        <div class="list-row">
+          <div class="thumb"></div>
+          <div class="list-meta">
+            <div class="cap" data-i18n="cap2">ڕیلی نوێ سبارەت بە شێوازی ژیان 🎬</div>
+            <div class="time mono">06 Sep — 09:12 PM</div>
+          </div>
+          <span class="badge pub" data-i18n="b_pub">بڵاوکراوە</span>
+          <div class="row-actions">
+            <button title="Publish now"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button>
+            <button title="Duplicate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button>
+          </div>
+        </div>
+        <div class="list-row">
+          <div class="thumb"></div>
+          <div class="list-meta">
+            <div class="cap" data-i18n="cap3">Post #152 — <span data-i18n="ig_error">هەڵەی Instagram API</span></div>
+            <div class="time mono">05 Sep — 08:00 PM</div>
+          </div>
+          <span class="badge fail" data-i18n="b_fail">سەرنەکەوتوو</span>
+          <div class="row-actions">
+            <button title="Publish now"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button>
+            <button title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CALENDAR ============ -->
+    <section class="view" data-view="calendar">
+      <div class="panel">
+        <div class="panel-head"><h3>September 2026</h3></div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="legend">
+          <span><i style="background:var(--amber)"></i> <span data-i18n="b_sched">خشتەکراو</span></span>
+          <span><i style="background:var(--teal)"></i> <span data-i18n="b_pub">بڵاوکراوە</span></span>
+          <span><i style="background:var(--rose)"></i> <span data-i18n="b_fail">سەرنەکەوتوو</span></span>
+          <span><i style="background:var(--text-dim)"></i> <span data-i18n="b_draft">ڕەشنووس</span></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CREATE POST ============ -->
+    <section class="view" data-view="create">
+      <div class="create-grid">
+        <div class="panel">
+          <label class="field-label" data-i18n="content_type">جۆری ناوەڕۆک</label>
+          <div class="type-toggle">
+            <label><input type="radio" name="ctype" checked><span data-i18n="img_post">📸 پۆستی وێنە</span></label>
+            <label><input type="radio" name="ctype"><span data-i18n="vid_post">🎬 ڤیدیۆ / ڕیل</span></label>
+          </div>
+
+          <div class="dropzone">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+            <div data-i18n="upload_media">وێنە یان ڤیدیۆ باربکە</div>
+            <div class="hint">JPG · PNG · MP4 · MOV</div>
+          </div>
+
+          <label class="field-label" data-i18n="caption">کابشن</label>
+          <textarea id="caption-box" rows="4" placeholder="…" data-i18n-ph="caption_ph"></textarea>
+
+          <label class="field-label" style="margin-top:14px;" data-i18n="hashtags">هاشتاگ</label>
+          <input class="input" id="hashtag-box" value="#AI #Gemini #ArtificialIntelligence">
+
+          <div class="ai-row">
+            <button class="chip" id="gen-caption"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8z"/></svg><span data-i18n="ai_gen_cap">دروستکردنی کابشن</span></button>
+            <button class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4l16 16M20 4L4 20"/></svg><span data-i18n="ai_gen_tags">دروستکردنی هاشتاگ</span></button>
+            <button class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8z"/></svg><span data-i18n="ai_improve">باشترکردن</span></button>
+            <button class="chip"><span data-i18n="ai_shorten">کورتکردنەوە</span></button>
+            <button class="chip"><span data-i18n="ai_translate">وەرگێڕان</span></button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin-bottom:14px;" data-i18n="schedule_post">خشتەکردنی پۆست</h3>
+          <div class="sched-grid">
+            <div>
+              <label class="field-label" data-i18n="date">بەروار</label>
+              <input class="input mono" type="text" value="12 / 09 / 2026">
+            </div>
+            <div>
+              <label class="field-label" data-i18n="time">کات</label>
+              <input class="input mono" type="text" value="08 : 30 PM">
+            </div>
+            <div class="full">
+              <label class="field-label" data-i18n="timezone">ناوچەی کاتی</label>
+              <input class="input mono" type="text" value="Asia/Baghdad" readonly>
+            </div>
+          </div>
+          <button class="btn-primary" data-i18n="schedule_btn">خشتەکردنی پۆست</button>
+
+          <div class="panel" style="margin-top:16px; background:var(--panel-2); border-style:dashed;">
+            <div class="panel-head"><h3 style="font-size:13px;color:var(--text-dim);" data-i18n="preview">پێشبینین</h3></div>
+            <div class="post-row" style="padding-inline:0;">
+              <div class="thumb" style="width:52px;height:52px;"></div>
+              <div class="list-meta">
+                <div class="cap" id="preview-cap" data-i18n="cap1">ئاشکراکردنی باشترین ئامرازەکانی زیرەکی دەستکرد 🚀</div>
+                <div class="time mono">@ibrahimlluqman</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ACCOUNT ============ -->
+    <section class="view" data-view="account">
+      <div class="panel">
+        <div class="acct-card">
+          <div class="avatar-lg">IL</div>
+          <div>
+            <div class="handle">@ibrahimlluqman</div>
+            <div class="status-row"><i></i><span data-i18n="connected">پەیوەستە بە Instagram Graph API</span></div>
+          </div>
+          <button class="btn-outline" data-i18n="disconnect">پچڕاندنی پەیوەندی</button>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:16px;">
+        <div class="panel-head">
+          <h3 data-i18n="insights_title">پشکنینی هەژمار</h3>
+          <button class="link-btn" id="ins-refresh-btn" data-i18n="refresh_now">نوێکردنەوە ئێستا</button>
+        </div>
+        <div class="stat-grid" style="margin-bottom:10px;">
+          <div class="stat-card"><div class="n" id="ins-followers">8,412</div><div class="l" data-i18n="followers">شوێنکەوتووان</div></div>
+          <div class="stat-card pub"><div class="n" id="ins-likes">316</div><div class="l" data-i18n="likes_today">لایک — ئەمڕۆ</div></div>
+          <div class="stat-card sched"><div class="n" id="ins-engagement">4.8%</div><div class="l" data-i18n="engagement">ڕێژەی کارلێک</div></div>
+        </div>
+        <p style="font-size:12px;color:var(--text-dim);">
+          <span data-i18n="last_checked">دوایین پشکنین:</span>
+          <span class="mono" id="ins-last-check">ئێستا</span> ·
+          <span data-i18n="auto_check_note">بەخۆکار هەموو ٢ کاتژمێر لەلایەن سێرڤەرەوە پشکنین دەکرێت</span>
+        </p>
+      </div>
+
+      <div class="panel" style="margin-top:16px;">
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.9;" data-i18n="no_password_note">
+          وشەی نهێنی هەژماری Instagram لەلایەن ئەم سیستەمە هەرگیز هەڵناگیرێت — پەیوەندی تەنها لە ڕێگەی Meta/Instagram API فەرمییەوە دەبێت.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ SETTINGS ============ -->
+    <section class="view" data-view="settings">
+      <div class="settings-grid">
+        <div>
+          <div class="settings-block">
+            <h3 data-i18n="s_account">هەژمار</h3>
+            <div class="field"><label data-i18n="username">ناوی بەکارهێنەر</label><input class="input" value="ibrahimlluqman"></div>
+            <div class="field" style="margin-top:10px;"><label data-i18n="password">وشەی نهێنی</label><input class="input" type="password" value="••••••••"></div>
+          </div>
+          <div class="settings-block">
+            <h3 data-i18n="s_language">زمان</h3>
+            <div class="lang-pills" id="lang-toggle-2">
+              <button data-lang="bad" class="active">کوردی بادینی</button>
+              <button data-lang="ar">العربية</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="settings-block">
+            <h3 data-i18n="s_appearance">ڕووکار</h3>
+            <div class="theme-pills" id="theme-pills">
+              <button data-theme="light" data-i18n="light">☀️ ڕووناک</button>
+              <button data-theme="dark" class="active" data-i18n="dark">🌙 تاریک</button>
+            </div>
+          </div>
+          <div class="settings-block">
+            <h3 data-i18n="s_instagram">Instagram</h3>
+            <div class="acct-card" style="gap:10px;">
+              <div class="avatar-sm">IL</div>
+              <div><div class="handle" style="font-size:13px;">@ibrahimlluqman</div><div class="status" data-i18n="connected_short">پەیوەستە ✓</div></div>
+            </div>
+          </div>
+          <div class="settings-block">
+            <h3 data-i18n="s_timezone">ناوچەی کاتی</h3>
+            <input class="input mono" value="Asia/Baghdad" readonly style="max-width:220px;">
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ============ MOBILE BOTTOM NAV ============ -->
+<div class="bottom-nav" id="bottom-nav">
+  <button class="active" data-view="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg><span data-i18n="nav_dashboard">داشبۆرد</span></button>
+  <button data-view="calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span data-i18n="nav_calendar">ڕۆژژمێر</span></button>
+  <button class="fab" data-view="create"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button data-view="posts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg><span data-i18n="nav_posts">پۆستەکان</span></button>
+  <button data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/></svg><span data-i18n="nav_settings">ڕێکخستن</span></button>
+</div>
+
+<script>
+/* عدّل هذا السطر باسم حسابك واسم الريبو بعد ما ترفعه على GitHub: */
+const REPO = { owner: "ibrahimlluqman", name: "REPLACE_WITH_YOUR_REPO_NAME" };
+
+/* ---------------- i18n dictionary ---------------- */
+const DICT = {
+  bad: {
+    login_title:"AI Social Scheduler", login_sub:"تایبەت بە ئیبراهیم — تەنها یەک هەژمار",
+    username:"ناوی بەکارهێنەر", password:"وشەی نهێنی", login_btn:"چوونەژوورەوە",
+    brand_sub:"بەڕێوەبردنی پۆست",
+    nav_dashboard:"داشبۆرد", nav_posts:"پۆستەکان", nav_calendar:"ڕۆژژمێر",
+    nav_create:"دروستکردنی پۆست", nav_account:"هەژماری ئینستاگرام", nav_settings:"ڕێکخستن",
+    connected_short:"پەیوەستە ✓",
+    stat_sched:"پۆستی خشتەکراو", stat_pub:"بڵاوکراوە", stat_fail:"سەرنەکەوتوو", stat_draft:"ڕەشنووس",
+    upcoming:"پۆستە داهاتووەکان", view_calendar:"بینینی ڕۆژژمێر",
+    post_image:"پۆستی وێنە", post_reel:"ڕیلی ڤیدیۆ", tomorrow_time:"سبەی — 08:00 PM",
+    b_sched:"خشتەکراو", b_pub:"بڵاوکراوە", b_fail:"سەرنەکەوتوو", b_draft:"ڕەشنووس",
+    recent_activity:"چالاکی دوایین", published_ok:"پۆست بە سەرکەوتوویی بڵاوکرایەوە",
+    failed_post:"Post #152 —", ig_error:"هەڵەی Instagram API",
+    f_all:"هەموو",
+    cap1:"ئاشکراکردنی باشترین ئامرازەکانی زیرەکی دەستکرد 🚀", cap2:"ڕیلی نوێ سبارەت بە شێوازی ژیان 🎬", cap3:"Post #152 —",
+    content_type:"جۆری ناوەڕۆک", img_post:"📸 پۆستی وێنە", vid_post:"🎬 ڤیدیۆ / ڕیل",
+    upload_media:"وێنە یان ڤیدیۆ باربکە", caption:"کابشن", caption_ph:"دەربارەی چی دەنووسیت؟",
+    hashtags:"هاشتاگ", ai_gen_cap:"دروستکردنی کابشن", ai_gen_tags:"دروستکردنی هاشتاگ",
+    ai_improve:"باشترکردن", ai_shorten:"کورتکردنەوە", ai_translate:"وەرگێڕان",
+    schedule_post:"خشتەکردنی پۆست", date:"بەروار", time:"کات", timezone:"ناوچەی کاتی",
+    schedule_btn:"خشتەکردنی پۆست", preview:"پێشبینین",
+    connected:"پەیوەستە بە Instagram Graph API", disconnect:"پچڕاندنی پەیوەندی",
+    no_password_note:"وشەی نهێنی هەژماری Instagram لەلایەن ئەم سیستەمە هەرگیز هەڵناگیرێت — پەیوەندی تەنها لە ڕێگەی Meta/Instagram API فەرمییەوە دەبێت.",
+    s_account:"هەژمار", s_language:"زمان", s_appearance:"ڕووکار", s_instagram:"Instagram", s_timezone:"ناوچەی کاتی",
+    light:"☀️ ڕووناک", dark:"🌙 تاریک",
+    insights_title:"پشکنینی هەژمار", refresh_now:"نوێکردنەوە ئێستا",
+    followers:"شوێنکەوتووان", likes_today:"لایک — ئەمڕۆ", engagement:"ڕێژەی کارلێک",
+    last_checked:"دوایین پشکنین:", auto_check_note:"بەخۆکار هەموو ٢ کاتژمێر لەلایەن سێرڤەرەوە پشکنین دەکرێت",
+  },
+  ar: {
+    login_title:"AI Social Scheduler", login_sub:"خاص بإبراهيم — حساب واحد فقط",
+    username:"اسم المستخدم", password:"كلمة المرور", login_btn:"تسجيل الدخول",
+    brand_sub:"إدارة المنشورات",
+    nav_dashboard:"لوحة التحكم", nav_posts:"المنشورات", nav_calendar:"التقويم",
+    nav_create:"إنشاء منشور", nav_account:"حساب Instagram", nav_settings:"الإعدادات",
+    connected_short:"متصل ✓",
+    stat_sched:"منشورات مجدولة", stat_pub:"تم نشرها", stat_fail:"فشل النشر", stat_draft:"مسودات",
+    upcoming:"المنشورات القادمة", view_calendar:"عرض التقويم",
+    post_image:"منشور صورة", post_reel:"ريل فيديو", tomorrow_time:"غداً — 08:00 PM",
+    b_sched:"مجدول", b_pub:"منشور", b_fail:"فشل", b_draft:"مسودة",
+    recent_activity:"النشاط الأخير", published_ok:"تم نشر المنشور بنجاح",
+    failed_post:"Post #152 —", ig_error:"خطأ في Instagram API",
+    f_all:"الكل",
+    cap1:"اكتشف أحدث أدوات الذكاء الاصطناعي 🚀", cap2:"ريل جديد عن أسلوب الحياة 🎬", cap3:"Post #152 —",
+    content_type:"نوع المحتوى", img_post:"📸 منشور صورة", vid_post:"🎬 فيديو / ريل",
+    upload_media:"ارفع صورة أو فيديو", caption:"الكابشن", caption_ph:"عن ماذا تكتب؟",
+    hashtags:"الهاشتاغات", ai_gen_cap:"توليد كابشن", ai_gen_tags:"توليد هاشتاغات",
+    ai_improve:"تحسين", ai_shorten:"تقصير", ai_translate:"ترجمة",
+    schedule_post:"جدولة المنشور", date:"التاريخ", time:"الوقت", timezone:"المنطقة الزمنية",
+    schedule_btn:"جدولة المنشور", preview:"معاينة",
+    connected:"متصل عبر Instagram Graph API", disconnect:"قطع الاتصال",
+    no_password_note:"لا يتم تخزين كلمة مرور حساب Instagram داخل هذا النظام أبداً — يتم الربط فقط عبر واجهة Meta/Instagram الرسمية.",
+    s_account:"الحساب", s_language:"اللغة", s_appearance:"المظهر", s_instagram:"Instagram", s_timezone:"المنطقة الزمنية",
+    light:"☀️ فاتح", dark:"🌙 داكن",
+    insights_title:"مراجعة الحساب", refresh_now:"تحديث الآن",
+    followers:"المتابعون", likes_today:"الإعجابات — اليوم", engagement:"معدل التفاعل",
+    last_checked:"آخر مراجعة:", auto_check_note:"تُراجَع تلقائياً كل ساعتين من قبل السيرفر",
+  }
+};
+
+function applyLang(lang){
+  document.documentElement.dataset.lang = lang;
+  const dict = DICT[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    if(dict[key] !== undefined) el.textContent = dict[key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    const key = el.getAttribute('data-i18n-ph');
+    if(dict[key] !== undefined) el.setAttribute('placeholder', dict[key]);
+  });
+  document.querySelectorAll('#lang-toggle button, #lang-toggle-2 button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+}
+
+document.querySelectorAll('#lang-toggle button, #lang-toggle-2 button').forEach(btn=>{
+  btn.addEventListener('click', ()=> applyLang(btn.dataset.lang));
+});
+
+/* ---------------- theme ---------------- */
+function applyTheme(theme){
+  document.documentElement.dataset.theme = theme;
+  document.querySelectorAll('#theme-pills button').forEach(b=> b.classList.toggle('active', b.dataset.theme===theme));
+  document.getElementById('theme-icon').innerHTML = theme === 'dark'
+    ? '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'
+    : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/>';
+}
+document.getElementById('theme-btn').addEventListener('click', ()=>{
+  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+});
+document.querySelectorAll('#theme-pills button').forEach(btn=>{
+  btn.addEventListener('click', ()=> applyTheme(btn.dataset.theme));
+});
+
+/* ---------------- navigation ---------------- */
+function goto(view){
+  document.querySelectorAll('.view').forEach(v=> v.classList.toggle('active', v.dataset.view===view));
+  document.querySelectorAll('.navlink').forEach(b=> b.classList.toggle('active', b.dataset.view===view));
+  document.querySelectorAll('.bottom-nav button[data-view]').forEach(b=> b.classList.toggle('active', b.dataset.view===view));
+  const titleKey = { dashboard:'nav_dashboard', posts:'nav_posts', calendar:'nav_calendar', create:'nav_create', account:'nav_account', settings:'nav_settings' }[view];
+  document.getElementById('page-title').textContent = DICT[document.documentElement.dataset.lang][titleKey];
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+document.querySelectorAll('.navlink, .bottom-nav button[data-view], [data-goto]').forEach(el=>{
+  el.addEventListener('click', ()=> goto(el.dataset.view || el.dataset.goto));
+});
+
+/* ---------------- posts filter ---------------- */
+document.querySelectorAll('.filter-row button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.filter-row button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+/* ---------------- AI generate caption demo ---------------- */
+document.getElementById('gen-caption').addEventListener('click', ()=>{
+  const lang = document.documentElement.dataset.lang;
+  const samples = {
+    bad: "کشف باشترین ئامرازەکانی زیرەکی دەستکرد بۆ ساڵی 2026 — کام یەکیان دەبێتە هاوڕێی کاری تۆ؟ 🤖✨",
+    ar: "تعرّف على أفضل أدوات الذكاء الاصطناعي لعام 2026 — أيها سيصبح مساعدك القادم؟ 🤖✨"
+  };
+  document.getElementById('caption-box').value = samples[lang];
+  document.getElementById('preview-cap').textContent = samples[lang];
+});
+document.getElementById('caption-box').addEventListener('input', e=>{
+  document.getElementById('preview-cap').textContent = e.target.value || DICT[document.documentElement.dataset.lang].cap1;
+});
+
+/* ---------------- calendar build ---------------- */
+function buildCalendar(marks){
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+  const dow = ['ش','ی','د','س','چ','پ','هـ'];
+  dow.forEach(d=>{
+    const el = document.createElement('div');
+    el.className='cal-dow'; el.textContent=d; grid.appendChild(el);
+  });
+  // Sept 2026 starts on Tuesday; Sat-first week => index of first day
+  const leading = 3; // Sun,Mon,Tue slots before day 1 (Sat=0,Sun=1,Mon=2,Tue=3start)
+  const daysInMonth = 30;
+  marks = marks || { 8:['sched','📸'], 12:['sched','🎬'], 6:['pub','✔'] };
+  for(let i=0;i<leading;i++){
+    const c = document.createElement('div'); c.className='cal-cell empty'; grid.appendChild(c);
+  }
+  for(let d=1; d<=daysInMonth; d++){
+    const c = document.createElement('div'); c.className='cal-cell';
+    const num = document.createElement('div'); num.className='d mono'; num.textContent=d;
+    c.appendChild(num);
+    if(marks[d]){
+      const tag = document.createElement('div');
+      tag.className = 'cal-tag ' + marks[d][0];
+      tag.textContent = marks[d][1];
+      c.appendChild(tag);
+    }
+    grid.appendChild(c);
+  }
+}
+buildCalendar();
+
+applyLang('bad');
+applyTheme('dark');
+
+/* ---------------- animated brain-shaped neural network background ---------------- */
+(function brainNetwork(){
+  const canvas = document.getElementById('brain-bg');
+  const ctx = canvas.getContext('2d');
+  let W,H,DPR;
+  let nodes = [], edges = [], pulses = [];
+
+  function resize(){
+    DPR = Math.min(window.devicePixelRatio||1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W*DPR; canvas.height = H*DPR;
+    canvas.style.width = W+'px'; canvas.style.height = H+'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    build();
+  }
+
+  // point-in-brain test: two lobes (left/right hemisphere) using superellipse blobs
+  function brainShape(t){
+    // t in [0,1) around a stylized brain silhouette (two lobes + stem)
+    const cx = W*0.5, cy = H*0.46;
+    const rx = Math.min(W,H*1.5)*0.30, ry = H*0.30;
+    const a = t*Math.PI*2;
+    // lobe wobble to suggest cortex folds
+    const wobble = 1 + 0.14*Math.sin(a*7) + 0.07*Math.sin(a*13+1);
+    const x = cx + Math.cos(a)*rx*wobble;
+    const y = cy + Math.sin(a)*ry*wobble*0.92 - Math.max(0,Math.sin(a))*ry*0.12;
+    return [x,y];
+  }
+
+  function build(){
+    nodes = [];
+    const count = W < 700 ? 42 : 78;
+    for(let i=0;i<count;i++){
+      const rand = Math.random();
+      const rad = Math.sqrt(Math.random());
+      const [ex,ey] = brainShape(Math.random());
+      const cx = W*0.5, cy = H*0.46;
+      const x = cx + (ex-cx)*rad*0.98;
+      const y = cy + (ey-cy)*rad*0.98;
+      nodes.push({ x, y, vx:(Math.random()-0.5)*0.15, vy:(Math.random()-0.5)*0.15, r: 1.2+Math.random()*1.6 });
+    }
+    edges = [];
+    for(let i=0;i<nodes.length;i++){
+      let dists = [];
+      for(let j=0;j<nodes.length;j++){
+        if(i===j) continue;
+        const dx=nodes[i].x-nodes[j].x, dy=nodes[i].y-nodes[j].y;
+        dists.push([Math.hypot(dx,dy), j]);
+      }
+      dists.sort((a,b)=>a[0]-b[0]);
+      const linkCount = 2 + Math.floor(Math.random()*2);
+      for(let k=0;k<linkCount && k<dists.length;k++){
+        if(dists[k][0] < Math.min(W,H)*0.16){
+          edges.push([i, dists[k][1]]);
+        }
+      }
+    }
+    pulses = [];
+    for(let i=0;i<Math.min(14, Math.floor(edges.length*0.15));i++){
+      spawnPulse();
+    }
+  }
+
+  function spawnPulse(){
+    if(!edges.length) return;
+    const e = edges[Math.floor(Math.random()*edges.length)];
+    pulses.push({ edge:e, t:0, speed:0.006+Math.random()*0.01 });
+  }
+
+  function colorAccent(){
+    return getComputedStyle(document.documentElement).getPropertyValue('--amber').trim() || '#F2A93B';
+  }
+
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    const isLight = document.documentElement.dataset.theme === 'light';
+    const lineColor = isLight ? 'rgba(90,70,30,0.10)' : 'rgba(242,169,59,0.14)';
+    const nodeColor = isLight ? 'rgba(90,70,30,0.35)' : 'rgba(238,235,245,0.55)';
+    const amber = colorAccent();
+
+    // drift nodes gently
+    for(const n of nodes){
+      n.x += n.vx; n.y += n.vy;
+      if(Math.random()<0.002){ n.vx = (Math.random()-0.5)*0.15; n.vy = (Math.random()-0.5)*0.15; }
+    }
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = lineColor;
+    for(const [i,j] of edges){
+      ctx.beginPath();
+      ctx.moveTo(nodes[i].x, nodes[i].y);
+      ctx.lineTo(nodes[j].x, nodes[j].y);
+      ctx.stroke();
+    }
+
+    // pulses traveling like synaptic signals
+    ctx.fillStyle = amber;
+    for(const p of pulses){
+      p.t += p.speed;
+      const a = nodes[p.edge[0]], b = nodes[p.edge[1]];
+      const x = a.x + (b.x-a.x)*p.t;
+      const y = a.y + (b.y-a.y)*p.t;
+      const glow = ctx.createRadialGradient(x,y,0,x,y,7);
+      glow.addColorStop(0, amber);
+      glow.addColorStop(1, 'rgba(242,169,59,0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath(); ctx.arc(x,y,7,0,Math.PI*2); ctx.fill();
+    }
+    pulses = pulses.filter(p=>p.t < 1);
+    if(Math.random() < 0.05) spawnPulse();
+
+    ctx.fillStyle = nodeColor;
+    for(const n of nodes){
+      ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,Math.PI*2); ctx.fill();
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    requestAnimationFrame(frame);
+  }
+})();
+
+/* ---------------- account insights (auto-review every 2 hours) ---------------- */
+(function insights(){
+  const INTERVAL_MS = 2*60*60*1000; // 2 hours — mirrors the server-side cron cadence
+  let lastCheck = new Date();
+  const followersEl = document.getElementById('ins-followers');
+  const likesEl = document.getElementById('ins-likes');
+  const engEl = document.getElementById('ins-engagement');
+  const lastEl = document.getElementById('ins-last-check');
+  let followers = 8412, likesToday = 316, engagement = 4.8;
+
+  function fmtAgo(){
+    const mins = Math.max(0, Math.round((Date.now()-lastCheck.getTime())/60000));
+    const lang = document.documentElement.dataset.lang;
+    if(mins < 1) return lang==='ar' ? 'الآن' : 'ئێستا';
+    return lang==='ar' ? `قبل ${mins} دقيقة` : `${mins} خولەک بەر لە ئێستا`;
+  }
+  function render(){
+    if(followersEl) followersEl.textContent = followers.toLocaleString('en-US');
+    if(likesEl) likesEl.textContent = likesToday.toLocaleString('en-US');
+    if(engEl) engEl.textContent = engagement.toFixed(1)+'%';
+    if(lastEl) lastEl.textContent = fmtAgo();
+  }
+  function refreshNow(simulated){
+    if(simulated){
+      followers += Math.floor(Math.random()*9)-1;
+      likesToday += Math.floor(Math.random()*14)-3;
+      engagement = Math.max(1, engagement + (Math.random()-0.5)*0.3);
+    }
+    lastCheck = new Date();
+    render();
+  }
+  document.addEventListener('click', e=>{
+    if(e.target.closest('#ins-refresh-btn')) refreshNow(true);
+  });
+  setInterval(()=>render(), 60000); // update "x minutes ago" live
+  setInterval(()=>refreshNow(true), INTERVAL_MS); // mirrors the 2-hour server cron
+  render();
+
+  // إذا الريبو مضبوط، نجيب آخر قراءة حقيقية من data/insights_log.json بدل المحاكاة
+  async function loadRealInsights(){
+    if(typeof REPO === 'undefined' || REPO.name === 'REPLACE_WITH_YOUR_REPO_NAME') return;
+    try{
+      const url = `https://raw.githubusercontent.com/${REPO.owner}/${REPO.name}/main/data/insights_log.json`;
+      const res = await fetch(url, { cache:'no-store' });
+      if(!res.ok) return;
+      const log = await res.json();
+      if(!log.length) return;
+      const latest = log[log.length-1];
+      followers = latest.followers_count;
+      lastCheck = new Date(latest.checked_at);
+      render();
+    }catch(e){ /* يبقى العرض التجريبي */ }
+  }
+  loadRealInsights();
+  setInterval(loadRealInsights, 5*60*1000);
+})();
+
+/* ---------------- PWA: service worker registration ---------------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+/* ---------------- live data from the repo's data/*.json (updated by GitHub Actions) ---------------- */
+let liveData = null; // يبقى null لو الريبو غير مضبوط بعد — تبقى بيانات العرض التجريبية كما هي
+
+function statusBadge(status){
+  return { pending:'sched', published:'pub', failed:'fail', draft:'draft' }[status] || 'draft';
+}
+function statusLabel(status){
+  const dict = DICT[document.documentElement.dataset.lang];
+  return { pending:dict.b_sched, published:dict.b_pub, failed:dict.b_fail, draft:dict.b_draft }[status] || status;
+}
+function fmtDateTime(iso){
+  const d = new Date(iso);
+  return d.toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:true }).replace(',', ' —');
+}
+
+function renderStats(posts){
+  const counts = { pending:0, published:0, failed:0, draft:0 };
+  posts.forEach(p=> counts[p.status] = (counts[p.status]||0) + 1);
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.textContent = v; };
+  set('stat-sched', counts.pending);
+  set('stat-pub', counts.published);
+  set('stat-fail', counts.failed);
+  set('stat-draft', counts.draft);
+}
+
+function renderUpcoming(posts){
+  const el = document.getElementById('upcoming-list');
+  if(!el) return;
+  const upcoming = posts.filter(p=>p.status==='pending')
+    .sort((a,b)=> new Date(a.scheduled_time_utc) - new Date(b.scheduled_time_utc))
+    .slice(0,3);
+  if(!upcoming.length){ return; } // يبقى العرض التجريبي إذا ما فيه بوستات قادمة
+  el.innerHTML = upcoming.map(p=>`
+    <div class="post-row">
+      <div class="post-icon">${p.content_type==='image' ? '📸' : '🎬'}</div>
+      <div class="post-meta">
+        <div class="t">${p.caption ? p.caption.slice(0,40) : p.content_type}</div>
+        <div class="s mono">${fmtDateTime(p.scheduled_time_utc)}</div>
+      </div>
+      <span class="badge ${statusBadge(p.status)}">${statusLabel(p.status)}</span>
+    </div>`).join('');
+}
+
+function renderPostsList(posts, filter){
+  const el = document.getElementById('posts-list-container');
+  if(!el) return;
+  filter = filter || 'all';
+  const map = { sched:'pending', pub:'published', fail:'failed', draft:'draft' };
+  const filtered = filter==='all' ? posts : posts.filter(p=>p.status === map[filter]);
+  if(!posts.length) return; // يبقى العرض التجريبي إذا الملف فاضي
+  el.innerHTML = filtered.map(p=>`
+    <div class="list-row">
+      <div class="thumb"></div>
+      <div class="list-meta">
+        <div class="cap">${p.caption || ''}</div>
+        <div class="time mono">${fmtDateTime(p.scheduled_time_utc)}</div>
+      </div>
+      <span class="badge ${statusBadge(p.status)}">${statusLabel(p.status)}</span>
+    </div>`).join('') || `<p style="color:var(--text-dim);font-size:13px;padding:10px 4px;">—</p>`;
+}
+
+function renderCalendarMarks(posts){
+  const marks = {};
+  posts.forEach(p=>{
+    const d = new Date(p.scheduled_time_utc);
+    if(d.getUTCFullYear()===2026 && d.getUTCMonth()===8){ // أيلول 2026 — عدّل حسب الشهر المعروض
+      marks[d.getUTCDate()] = [statusBadge(p.status), p.content_type==='image' ? '📸' : '🎬'];
+    }
+  });
+  if(Object.keys(marks).length) buildCalendar(marks);
+}
+
+async function loadRepoData(){
+  if(REPO.name === 'REPLACE_WITH_YOUR_REPO_NAME') return; // لسا ما ضبطت اسم الريبو
+  try{
+    const url = `https://raw.githubusercontent.com/${REPO.owner}/${REPO.name}/main/data/scheduled_posts.json`;
+    const res = await fetch(url, { cache:'no-store' });
+    if(!res.ok) return;
+    liveData = await res.json();
+    renderStats(liveData);
+    renderUpcoming(liveData);
+    renderPostsList(liveData);
+    renderCalendarMarks(liveData);
+  }catch(e){ /* الريبو مو مضبوط بعد أو الشبكة غير متاحة — تبقى بيانات العرض التجريبية */ }
+}
+document.querySelectorAll('.filter-row button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{ if(liveData) renderPostsList(liveData, btn.dataset.filter); });
+});
+loadRepoData();
+setInterval(loadRepoData, 5*60*1000); // يتزامن مع دورية GitHub Actions كل 5 دقايق
+</script>
+</body>
+</html>

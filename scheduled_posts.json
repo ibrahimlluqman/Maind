@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "content_type": "image",
+    "caption": "اكتشف أحدث أدوات الذكاء الاصطناعي 🚀",
+    "hashtags": "#AI #Gemini #ArtificialIntelligence",
+    "media_path": "media/sample-image.jpg",
+    "scheduled_time_utc": "2026-09-12T17:30:00Z",
+    "status": "pending",
+    "attempts": 0,
+    "last_error": null,
+    "published_media_id": null
+  },
+  {
+    "id": 2,
+    "content_type": "reel",
+    "caption": "ريل جديد عن أسلوب الحياة 🎬",
+    "hashtags": "#Reels #Lifestyle",
+    "media_path": "media/sample-video.mp4",
+    "scheduled_time_utc": "2026-09-13T15:30:00Z",
+    "status": "pending",
+    "attempts": 0,
+    "last_error": null,
+    "published_media_id": null
+  }
+]
